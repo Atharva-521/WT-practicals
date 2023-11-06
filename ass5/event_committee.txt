@@ -1,0 +1,107 @@
+C:\Users\hp>psql -U postgres
+Password for user postgres:
+psql (9.4.0)
+WARNING: Console code page (437) differs from Windows code page (1252)
+         8-bit characters might not work correctly. See psql reference
+         page "Notes for Windows users" for details.
+Type "help" for help.
+
+postgres=# \c event_committee
+WARNING: Console code page (437) differs from Windows code page (1252)
+         8-bit characters might not work correctly. See psql reference
+         page "Notes for Windows users" for details.
+You are now connected to database "event_committee" as user "postgres".
+event_committee=# create table event(eno int primary key,title varchar(20),date date);
+CREATE TABLE
+event_committee=# create table committee(cno int primary key,name varchar(40),head varchar(30),from_time time,to_time time,status varchar(20));
+CREATE TABLE
+event_committee=# \d event;
+            Table "public.event"
+ Column |         Type          | Modifiers
+--------+-----------------------+-----------
+ eno    | integer               | not null 
+ title  | character varying(20) |
+ date   | date                  |
+Indexes:
+    "event_pkey" PRIMARY KEY, btree (eno)
+
+
+event_committee=# \d committee;
+            Table "public.committee"
+  Column   |          Type          | Modifiers
+-----------+------------------------+-----------
+ cno       | integer                | not null
+ name      | character varying(40)  |
+ head      | character varying(30)  |
+ from_time | time without time zone |
+ to_time   | time without time zone |
+ status    | character varying(20)  |
+Indexes:
+    "committee_pkey" PRIMARY KEY, btree (cno)
+
+event_committee=# insert into event values(1,'Adivisory Event','9/7/2012');
+INSERT 0 1
+event_committee=# insert into event values(2,'Petition Event','5/6/2015');
+INSERT 0 1
+event_committee=# insert into event values(3,'Ruling Event','7/6/2017');
+INSERT 0 1
+
+event_committee=# insert into committee values(12,'Business Advisory Committee','Manager','12:00','2:30','non-working');
+INSERT 0 1
+event_committee=# insert into committee values(11,'Committee on Petitions','Chairman','1:00','3:00','non-working');
+INSERT 0 1
+event_committee=# insert into committee values(13,'Committee on Rules','Chairman','3:00','4:30','non-working');
+INSERT 0 1
+
+event_committee=# select * from event;
+ eno |      title      |    date
+-----+-----------------+------------
+   1 | Adivisory Event | 2012-07-09
+   2 | Petition Event  | 2015-06-05
+   3 | Ruling Event    | 2017-06-07
+(3 rows)
+
+
+event_committee=# select * from committee;
+ cno |            name             |   head   | from_time | to_time  |   status
+-----+-----------------------------+----------+-----------+----------+-------------
+  12 | Business Advisory Committee | Manager  | 12:00:00  | 02:30:00 | non-working
+  11 | Committee on Petitions      | Chairman | 01:00:00  | 03:00:00 | non-working
+  13 | Committee on Rules          | Chairman | 03:00:00  | 04:30:00 | non-working
+(3 rows)
+
+event_committee=# create table event_committee(eno int references event(eno) on delete cascade,cno int references committee(cno) on delete cascade);
+CREATE TABLE
+event_committee=# insert into event_committee values(1,12);
+INSERT 0 1
+event_committee=# insert into event_committee values(2,11);
+INSERT 0 1
+event_committee=# insert into event_committee values(3,13);
+INSERT 0 1
+
+event_committee=# \d event_committee;
+Table "public.event_committee"
+ Column |  Type   | Modifiers
+--------+---------+-----------
+ eno    | integer |
+ cno    | integer |
+Foreign-key constraints:
+    "event_committee_cno_fkey" FOREIGN KEY (cno) REFERENCES committee(cno) ON DELETE CASCADE
+    "event_committee_eno_fkey" FOREIGN KEY (eno) REFERENCES event(eno) ON DELETE CASCADE
+
+
+event_committee=# select * from event_committee;
+ eno | cno
+-----+-----
+   1 |  12
+   2 |  11
+   3 |  13
+(3 rows)
+
+update committee set status='working' where cno in(
+select cno from event_committee where eno in(
+select eno from event where title='Ruling Event'));
+
+update committee set status='non-working' where cno in(
+select cno from event_committee where eno in(
+select eno from event where title='Ruling Event'));

@@ -1,0 +1,48 @@
+sudo -u postgres psql
+
+
+-- Create the database (replace 'your_database_name' with your desired database name)
+CREATE DATABASE your_database_name;
+
+-- Connect to the newly created database
+\c your_database_name;
+
+-- Create the Event and Committee tables
+CREATE TABLE Event (
+    eno SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    date DATE
+);
+
+CREATE TABLE Committee (
+    cno SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    head VARCHAR(255),
+    from_time TIME,
+    to_time TIME,
+    status VARCHAR(255)
+);
+
+-- Create the event_committee_relation table for the many-to-many relationship
+CREATE TABLE event_committee_relation (
+    eno INT REFERENCES Event(eno),
+    cno INT REFERENCES Committee(cno),
+    PRIMARY KEY (eno, cno)
+);
+
+-- Insert sample data into the tables
+-- Sample events
+INSERT INTO Event (title, date) VALUES
+    ('Event 1', '2023-11-10'),
+    ('Event 2', '2023-11-15');
+
+-- Sample committees
+INSERT INTO Committee (name, head, from_time, to_time, status) VALUES
+    ('Committee 1', 'Head 1', '08:00:00', '17:00:00', 'pending'),
+    ('Committee 2', 'Head 2', '09:00:00', '16:00:00', 'working');
+
+-- Establish relationships between events and committees
+INSERT INTO event_committee_relation (eno, cno) VALUES
+    (1, 1),
+    (1, 2),
+    (2, 2);
